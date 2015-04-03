@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US States</title>
+
+    <link rel="stylesheet" href="http://leafletjs.com/dist/leaflet.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="/static/leaflet/leaflet.ie.css" />
+    <![endif]-->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="http://leafletjs.com/dist/leaflet.js"></script>
+    <script src="TileLayer.GeoJSON.js"></script>
+
+    <style type="text/css">
+    html, body, #map {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+    var map = new L.Map('map'),
+        cloudmadeUrl = 'http://{s}.tile.cloudmade.com/1a1b06b230af4efdbb989ea99e9841af/997/256/{z}/{x}/{y}.png',
+        cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+    
+    //map.setView(new L.LatLng(38.617, -100.261), 4);
+	map.setView(new L.LatLng(40.0, -105.27), 14);
+
+    var baseLayer = new L.TileLayer(cloudmadeUrl, { attribution: cloudmadeAttribution});
+    map.addLayer(baseLayer);
+
+    var style = {
+        "clickable": true,
+        "color": "#00D",
+        "fillColor": "#00D",
+        "weight": 1.0,
+        "opacity": 0.3,
+        "fillOpacity": 0.2
+    };
+    var hoverStyle = {
+        "fillOpacity": 0.5
+    };
+
+    //var geojsonURL = 'http://polymaps.appspot.com/state/{z}/{x}/{y}.json';
+	var geojsonURL = 'https://t2p.trimblemaps.com/cace119c-0d1c-4a52-a898-27ef713dbbbe/{z}/{y}/{x}.json?client_id=insphere&subscription=f1a729d2-ec09-4f22-b140-3ae172c3487f&Signature=jrM9PK0TM1WYgyaWFtFIUyJJUbl0xWdB5cGhs9ZFe-NIjWQ-hYH6wEoVx3X4CCn~MJQlBh~Zmqf~GupGnni3wolHDKxnXeXciNcp-oKUCBwnTwkpmk4GQQ3zWb~xt7j1Nv34W1I1B93jX~ESedlrA6tUA~-XgVdCYyrgO~LIWrpE54m-MQUs8N7FsK4zJOGPhjmam0CZ~fwbMElTmAqvWVLm9CWXZbIGbnZyGkicvRQBR0sdwRes~VCgOcsS32dTT3xZb1EtHRKvziKcrN3fimEAzDAzNzF3xzI~cc8a-46Y1TEdC3FHFzHQd6-3fDKZG1EJCDO~l-IzuFC27Ttz6Q__&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90MnAudHJpbWJsZW1hcHMuY29tL2NhY2UxMTljLTBkMWMtNGE1Mi1hODk4LTI3ZWY3MTNkYmJiZS8qP2NsaWVudF9pZD1pbnNwaGVyZSZzdWJzY3JpcHRpb249ZjFhNzI5ZDItZWMwOS00ZjIyLWIxNDAtM2FlMTcyYzM0ODdmIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNDI4MDk1OTcyfX19XX0_&Key-Pair-Id=APKAIRG7ET2A52DPQUAQ'
+    var geojsonTileLayer = new L.TileLayer.GeoJSON(geojsonURL, {
+            clipTiles: true,
+            unique: function (feature) { 
+                return feature.id;
+            }
+        }, {
+            style: style,
+            onEachFeature: function (feature, layer) {
+				console.log("feature:"+JSON.stringify(feature));
+				console.log("layer:"+JSON.stringify(layer));
+                if (feature.properties) {
+                    var popupString = '<div class="popup">';
+                    for (var k in feature.properties) {
+                        var v = feature.properties[k];
+                        popupString += k + ': ' + v + '<br />';
+                    }
+                    popupString += '</div>';
+                    layer.bindPopup(popupString);
+					L.marker([feature.properties.dec_lat, feature.properties.dec_long], {title: feature.properties.name})
+					.addTo(map)
+					.bindPopup(popupString);
+                }
+                if (!(layer instanceof L.Point)) {
+                    layer.on('mouseover', function () {
+                        layer.setStyle(hoverStyle);
+                    });
+                    layer.on('mouseout', function () {
+                        layer.setStyle(style);
+                    });
+                }
+            },
+			xpointToLayer: function (feature, latlng) {
+				//console.log("latlng=" + latlng);
+				L.marker([feature.properties.dec_lat, feature.properties.dec_long], {title: feature.properties.name})
+				.addTo(map);
+				// .bindPopup(popupString);
+			}
+        }
+    );
+    map.addLayer(geojsonTileLayer);
+    </script>
+</body>
+</html>
